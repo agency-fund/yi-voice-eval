@@ -8,4 +8,9 @@ dependencies = [
     "fsspec>=2025.9.0",
     "jupyter>=1.0.0",
     "jupyterlab>=4.0.0",
+    "pyyaml>=6.0",
+    "pandas>=2.0.0",
+    "openai-whisper>=20250625",
+    "python-dotenv>=1.1.1",
+    "requests>=2.32.5",
 ]
