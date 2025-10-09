@@ -1,0 +1,27 @@
+dataset:
+  name: "Haveri Audios - Youth Impact Kannada STT"
+  description: "Initial 42 audio files for STT baseline evaluation"
+  date_created: "2024-09-30"
+  language: "kn"
+
+input:
+  audio_dir: "files/Haveri_Audios"
+  audio_formats: ["*.aac", "*.amr", "*.mp3", "*.mp4", "*.wav"]
+
+output:
+  processed_audio_dir: "files/processed"
+  transcriptions_dir: "files/transcriptions"
+  reports_dir: "files/reports"
+
+whisper:
+  model: "large-v3"
+  language: "kn"
+  task: "transcribe"
+
+sarvam:
+  language_code: "kn-IN"
+  transliterate: true
+
+processing:
+  skip_on_error: true
+  verbose: true
