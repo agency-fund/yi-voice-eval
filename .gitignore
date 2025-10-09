@@ -15,3 +15,7 @@ files/
 
 # macOS
 .DS_Store
+
+# Planning/scratch docs (not checked in)
+_*.md
+_*.txt
