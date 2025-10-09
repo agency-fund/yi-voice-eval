@@ -13,6 +13,7 @@ However, off-the-shelf ASR don't perform well with children's voices in low-band
 **Total audio:** 9.01 hours across 41 files (177 MB)
 
 **Key Statistics:**
+
 - Duration range: 10 seconds to 32 minutes (avg: 13.2 min)
 - Sample rates: Primarily 8kHz (56%), with 48kHz (17%), 16kHz (15%), 44.1kHz (12%)
 - Codecs: AAC (56%), AMR-NB (20%), MP3 (20%), PCM (5%)
@@ -29,6 +30,7 @@ This represents real-world, low-bandwidth phone call audio - the exact condition
 ### Phase 1: Whisper as Temporary Baseline (Current)
 
 In the absence of professional human transcriptions, we use **Whisper Large V3** as a pseudo-ground-truth baseline. This allows us to:
+
 - Begin evaluation immediately rather than waiting
 - Generate comparative metrics between STT models
 - Establish relative performance rankings
@@ -38,11 +40,13 @@ In the absence of professional human transcriptions, we use **Whisper Large V3**
 ### Phase 2: Professional Transcriptions (Target)
 
 **URGENCY:** Professional Kannada transcriptions are essential for valid evaluation. Without them, we cannot:
+
 - Determine true accuracy of any model (including Whisper)
 - Make confident production deployment decisions
 - Understand model performance on actual children's Kannada speech
 
 **Timeline:** Professional transcriptions are in progress via transcription service. Upon delivery:
+
 1. Re-evaluate ALL models (including Whisper) against human ground truth
 2. Compare Phase 1 vs Phase 2 rankings to validate/invalidate initial findings
 3. Generate authoritative accuracy metrics for production decisions
@@ -54,17 +58,19 @@ In the absence of professional human transcriptions, we use **Whisper Large V3**
 Based on Kannada language support and performance with low-bandwidth audio:
 
 **Tier 1 (MVP):**
+
 1. **Whisper Large V3** - OpenAI's multilingual model (Phase 1 baseline, Phase 2 evaluated)
 2. **Azure Speech Services** - Kannada (kn-IN) confirmed, strong India presence
 3. **AssemblyAI** - Explicit Kannada support across 99+ languages
 
-**Tier 2 (If validated):**
-4. **Google Cloud Speech-to-Text V2** - Likely Kannada support (pending verification)
+**Tier 2 (If validated):** 4. **Google Cloud Speech-to-Text V2** - Likely Kannada support (pending verification)
 
 **Excluded:**
+
 - Deepgram (no Kannada support, only Hindi/Indian English)
 
 **Evaluation criteria:**
+
 - Word Error Rate (WER) / Character Error Rate (CER)
 - Cost per hour of audio
 - Processing latency
@@ -121,6 +127,7 @@ This codebase contains exploratory code for a voice model evaluation harness bui
 ### Storage Abstraction
 
 Uses **fsspec** for seamless local/cloud storage:
+
 - **Development:** Local filesystem (`/data` directory)
 - **Production:** Google Cloud Storage or other cloud providers
 - Config-driven: `storage_backend: local` or `storage_backend: gcs`
@@ -162,6 +169,7 @@ cp config/config.template.yaml config/config.yaml
 ### Credentials Setup
 
 **Environment Variables (`.env` file):**
+
 ```bash
 # Google Cloud
 GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
@@ -174,6 +182,7 @@ OPENAI_API_KEY=your_key_here  # If using Whisper API
 ```
 
 **Google Sheets Access (User OAuth):**
+
 1. Create Google Cloud project (owned by The Agency Fund)
 2. Enable Google Sheets API + Google Drive API
 3. Create OAuth 2.0 credentials (Desktop app type)
@@ -206,6 +215,7 @@ uv run python -m yi_voice_eval.validate_config
 **Input:** 41 raw audio files (mixed formats, sample rates, codecs)
 
 **Processing:**
+
 - Decode AMR-NB, AAC, MP3 codecs (via ffmpeg)
 - Resample to 16kHz (standard STT input)
 - Convert stereo → mono
@@ -213,8 +223,9 @@ uv run python -m yi_voice_eval.validate_config
 - Export as WAV for consistency
 
 **Output:**
-- `/data/processed/` - Standardized audio files
-- `/data/transcriptions/whisper_baseline/` - Whisper SRT transcriptions
+
+- `/files/processed/` - Standardized audio files
+- `/files/transcriptions/whisper_baseline/` - Whisper SRT transcriptions
 
 **Rationale:** Preprocessing ensures fair comparison (all models receive identical input) while maintaining real-world audio characteristics (low bitrate, phone quality).
 
@@ -223,13 +234,15 @@ uv run python -m yi_voice_eval.validate_config
 **Input:** Processed audio files + Whisper baseline
 
 **Processing:**
+
 - Run each STT model (Azure, AssemblyAI, Google) on all files
 - Include retry logic (tenacity) for API rate limits/failures
 - Log processing time, API costs, errors per file
 - Convert all outputs to SRT format (standardized timestamps)
 
 **Output:**
-- `/data/transcriptions/{model_name}/` - SRT files per model
+
+- `/files/transcriptions/{model_name}/` - SRT files per model
 - `processing_logs.json` - Detailed execution logs
 
 **Error Handling:** Failed files logged but don't block pipeline; retry once on transient errors.
@@ -239,6 +252,7 @@ uv run python -m yi_voice_eval.validate_config
 **Input:** All transcription SRTs + Whisper baseline (or ground truth when available)
 
 **Processing:**
+
 - Align transcriptions by timestamp
 - Calculate WER, CER for each model vs baseline
 - Compute custom WER for math-critical vocabulary
@@ -246,6 +260,7 @@ uv run python -m yi_voice_eval.validate_config
 - Generate comparative statistics
 
 **Output:**
+
 - Google Sheets with two worksheets (see Results Format below)
 - Timestamped worksheet appended to master spreadsheet
 - Config snapshot included for reproducibility
@@ -255,17 +270,20 @@ uv run python -m yi_voice_eval.validate_config
 ### Standard Metrics
 
 **Word Error Rate (WER):**
+
 - Measures word-level transcription accuracy
 - Formula: `(Substitutions + Deletions + Insertions) / Total Words`
 - Lower is better; production target: <15% for math tutoring use case
 
 **Character Error Rate (CER):**
+
 - Measures character-level accuracy (useful for morphologically rich languages like Kannada)
 - More granular than WER, better captures partial correctness
 
 ### Custom Metrics (Future)
 
 **Math Vocabulary WER:**
+
 - Focused WER on numbers, mathematical terms, key tutoring phrases
 - Rationale: Misrecognizing "2 + 3 = 5" is more critical than filler words
 - Implementation: Weighted WER with importance list (last mile consideration)
@@ -287,19 +305,19 @@ uv run python -m yi_voice_eval.validate_config
 
 **Worksheet 1: Aggregated Results** (`results_2025-01-15_1430`)
 
-| Model | Overall WER (%) | CER (%) | Cost/Hour ($) | Avg Latency (s) | Files Processed | Total Duration (hrs) | Notes |
-|-------|-----------------|---------|---------------|-----------------|-----------------|---------------------|-------|
-| Whisper Large V3 | 12.3 | 8.1 | 0.00 (local) | 2.3 | 41 | 9.01 | Baseline (not ground truth) |
-| Azure Speech | 18.7 | 11.2 | 9.18 | 1.1 | 41 | 9.01 | kn-IN locale |
-| AssemblyAI | 15.4 | 9.6 | 8.10 | 1.8 | 40 | 8.92 | 1 file failed (AMR decode issue) |
-| Google STT V2 | - | - | - | - | - | - | Pending validation |
+| Model            | Overall WER (%) | CER (%) | Cost/Hour ($) | Avg Latency (s) | Files Processed | Total Duration (hrs) | Notes                            |
+| ---------------- | --------------- | ------- | ------------- | --------------- | --------------- | -------------------- | -------------------------------- |
+| Whisper Large V3 | 12.3            | 8.1     | 0.00 (local)  | 2.3             | 41              | 9.01                 | Baseline (not ground truth)      |
+| Azure Speech     | 18.7            | 11.2    | 9.18          | 1.1             | 41              | 9.01                 | kn-IN locale                     |
+| AssemblyAI       | 15.4            | 9.6     | 8.10          | 1.8             | 40              | 8.92                 | 1 file failed (AMR decode issue) |
+| Google STT V2    | -               | -       | -             | -               | -               | -                    | Pending validation               |
 
 **Worksheet 2: Line-by-Line Results** (`details_2025-01-15_1430`)
 
-| Audio File | Timestamp | Reference (Whisper) | Azure | AssemblyAI | WER Azure (%) | WER AssemblyAI (%) | Audio URL |
-|------------|-----------|---------------------|-------|------------|---------------|--------------------|-----------|
-| call_001.wav | 0:23-0:31 | ಬೀಜ ಸಮಾನ | ಬಿಜ ಸಮಾನ | ಬೀಜ ಸಮಾನಾ | 12.5 | 5.0 | gs://bucket/call_001.wav |
-| call_001.wav | 0:31-0:37 | ಎರಡು ಮತ್ತು ಮೂರು | ಎರಡು ಮತ್ತು ಮುರು | ಎರಡು ಮತ್ತು ಮೂರು | 16.7 | 0.0 | gs://bucket/call_001.wav |
+| Audio File   | Timestamp | Reference (Whisper) | Azure           | AssemblyAI      | WER Azure (%) | WER AssemblyAI (%) | Audio URL                |
+| ------------ | --------- | ------------------- | --------------- | --------------- | ------------- | ------------------ | ------------------------ |
+| call_001.wav | 0:23-0:31 | ಬೀಜ ಸಮಾನ            | ಬಿಜ ಸಮಾನ        | ಬೀಜ ಸಮಾನಾ       | 12.5          | 5.0                | gs://bucket/call_001.wav |
+| call_001.wav | 0:31-0:37 | ಎರಡು ಮತ್ತು ಮೂರು     | ಎರಡು ಮತ್ತು ಮುರು | ಎರಡು ಮತ್ತು ಮೂರು | 16.7          | 0.0                | gs://bucket/call_001.wav |
 
 **Metadata Sheet:** Config snapshot, git commit, processing date, model versions
 
@@ -312,20 +330,24 @@ uv run python -m yi_voice_eval.validate_config
 ## Potential Failure Modes
 
 ### Colab-Specific Issues
+
 - **Session timeouts:** 12hr limit (free), 90min if GPU unused → Solution: Break into batches or use Colab Pro
 - **Storage limits:** 100GB temp storage → Solution: Stream from/to GCS directly with fsspec
 
 ### API Issues
+
 - **Rate limiting:** STT APIs have quotas → Solution: Tenacity retry with exponential backoff
 - **AMR-NB codec:** Not all libraries decode AMR-NB natively → Solution: Verify ffmpeg has amr codec support
 - **Language code mismatches:** Some APIs use `kn-IN`, others `kan-IN` → Solution: Test per provider in config
 
 ### Processing Issues
+
 - **Mixed sample rates:** Resampling 8kHz→16kHz may introduce artifacts → Solution: Test both raw and resampled
 - **Stereo files:** 2% of files have separate channels (tutor/child?) → Solution: Investigate before simple mono conversion
 - **Long files:** 32-minute files may exceed API limits → Solution: Chunk long files at silence points
 
 ### Multi-Organization Handoff
+
 - **Credentials management:** Multiple orgs need access → Solution: Service accounts with least-privilege IAM roles
 - **Colab vs local divergence:** Different runtime environments → Solution: UV + .env standardization, document differences
 
@@ -334,16 +356,19 @@ uv run python -m yi_voice_eval.validate_config
 ### Phase 2 Enhancements
 
 **Diarization (Speaker Separation):**
+
 - Use WhisperX (Whisper + Pyannote) to separate tutor vs child speech
 - Evaluate STT on child segments only (more relevant to use case)
 - Prerequisite: Professional transcriptions with speaker labels
 
 **Noise Reduction Testing:**
+
 - Compare STT performance on raw vs noise-reduced audio
 - Test preprocessing strategies (spectral gating, Wiener filtering)
 - Measure cost/benefit of preprocessing pipeline
 
 **Fine-Tuning:**
+
 - Fine-tune Whisper on Youth Impact dataset (requires ground truth)
 - Evaluate custom model vs off-the-shelf options
 - Decision point: Build vs buy analysis
@@ -351,14 +376,17 @@ uv run python -m yi_voice_eval.validate_config
 ### Advanced Metrics
 
 **Code-Switching Analysis:**
+
 - Measure performance on Kannada-English mixed speech
 - Common in math tutoring (English number names, terminology)
 
 **Age-Specific Performance:**
+
 - If age labels available, analyze WER by child age group
 - Younger children = different voice characteristics
 
 **Error Type Analysis:**
+
 - Categorize errors (substitution, insertion, deletion)
 - Math-specific: Number transcription accuracy
 - Tutoring-specific: Key phrase recognition
@@ -366,16 +394,19 @@ uv run python -m yi_voice_eval.validate_config
 ### Production Evolution
 
 **API Service:**
+
 - Wrap best-performing model in REST API
 - Integrate with Youth Impact call platform
 - Real-time transcription vs batch processing
 
 **Active Learning Pipeline:**
+
 - Continuously collect new voice samples
 - Human-in-the-loop correction for edge cases
 - Incremental model improvement
 
 **Cost Optimization:**
+
 - If fine-tuned model outperforms APIs, deploy self-hosted
 - Evaluate on-device models for offline capability
 
