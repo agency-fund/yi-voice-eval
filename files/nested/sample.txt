@@ -1,0 +1,6 @@
+ಶುಭೋದಯ! (Shubhodaya - Good morning!)
+
+This is a nested file for testing subdirectory support.
+Path: files/nested/sample.txt
+
+Confirming fsspec works with nested directories.

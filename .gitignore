@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.env
+venv/
+
+# Local file storage (ignore everything by default)
+files/
+# But allow sample test files for documentation
+!files/sample.txt
+!files/nested/
+!files/nested/sample.txt
+
+# Jupyter
+.ipynb_checkpoints/
+
