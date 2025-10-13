@@ -1,9 +1,17 @@
-"""Sarvam AI transcription utilities."""
+"""
+Sarvam AI API integration for speech-to-text and transliteration.
+
+Sarvam AI is an India-focused AI platform that provides:
+- Speech-to-text for Indian languages (including Kannada)
+- Transliteration from native scripts to Roman/Latin script
+
+This module provides functions for both STT and transliteration.
+"""
 
 import os
 import requests
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
 
 def transcribe_with_sarvam(
@@ -96,6 +104,73 @@ def transliterate_text(
 
     result = response.json()
     return result.get('transliterated_text')
+
+
+def transliterate_segments(
+    segments: List[Dict[str, Any]],
+    api_key: str,
+    source_language_code: str = "kn-IN",
+    text_field: str = "text"
+) -> List[Dict[str, Any]]:
+    """
+    Transliterate text in a list of segments (e.g., from Whisper API).
+
+    Useful for transliterating Whisper's timestamped segments.
+
+    Args:
+        segments: List of segment dicts containing text to transliterate
+        api_key: Sarvam API key
+        source_language_code: Source language code
+        text_field: Key in segment dict containing text to transliterate
+
+    Returns:
+        List of segments with added 'text_romanized' field
+
+    Example:
+        >>> segments = [{"text": "ಕನ್ನಡ", "start": 0.0, "end": 1.0}]
+        >>> result = transliterate_segments(segments, api_key)
+        >>> print(result[0]["text_romanized"])
+        "Kannada"
+    """
+    romanized_segments = []
+
+    for segment in segments:
+        # Copy original segment
+        new_segment = segment.copy()
+
+        # Transliterate text if present
+        if text_field in segment and segment[text_field]:
+            romanized = transliterate_text(
+                segment[text_field],
+                api_key,
+                source_language_code
+            )
+            new_segment["text_romanized"] = romanized or segment[text_field]
+        else:
+            new_segment["text_romanized"] = None
+
+        romanized_segments.append(new_segment)
+
+    return romanized_segments
+
+
+def get_sarvam_api_key() -> str:
+    """
+    Get Sarvam API key from environment variable.
+
+    Returns:
+        API key string
+
+    Raises:
+        ValueError: If SARVAM_API_KEY not found in environment
+    """
+    api_key = os.getenv('SARVAM_API_KEY')
+    if not api_key:
+        raise ValueError(
+            "SARVAM_API_KEY not found in environment. "
+            "Set it in your .env file."
+        )
+    return api_key
 
 
 def save_transcription_as_text(
