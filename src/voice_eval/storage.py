@@ -63,6 +63,32 @@ def read_file(filename: str, mode: str = "r", base_dir: Optional[str] = None) ->
         return f.read()
 
 
+def write_file(filename: str, content: str, mode: str = "w", base_dir: Optional[str] = None) -> str:
+    """
+    Write a file to storage using fsspec.
+
+    Args:
+        filename: Name of the file to write
+        content: Content to write to the file
+        mode: File mode ('w' for text, 'wb' for binary)
+        base_dir: Base directory (defaults to 'files/' at project root)
+
+    Returns:
+        Full path to the written file
+    """
+    fs = get_filesystem("local")
+    file_path = get_file_path(filename, base_dir)
+
+    # Ensure parent directory exists
+    parent_dir = str(Path(file_path).parent)
+    fs.makedirs(parent_dir, exist_ok=True)
+
+    with fs.open(file_path, mode) as f:
+        f.write(content)
+
+    return file_path
+
+
 def list_files(base_dir: Optional[str] = None, pattern: str = "*") -> list[str]:
     """
     List all files in storage directory.

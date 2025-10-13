@@ -2,6 +2,28 @@
 
 Youth Impact is an NGO focused on strengthening children's foundational math through teacher-lead, phone-based tutoring. By 2026, they aim to reach 2.5 million across Karnataka, India.
 
+## Current Status
+
+**Phase: Initial API Testing & Pipeline Development**
+
+✅ **Completed:**
+- Project setup with UV package manager
+- Configuration system with YAML manifests
+- Audio metadata inspection (42 files, 9+ hours)
+- OpenAI Whisper API integration with `verbose_json` format
+- Sarvam AI STT integration with Kannada-to-Roman transliteration
+- Combined Whisper + Sarvam pipeline (both native and romanized output)
+- Storage utilities with fsspec abstraction
+
+🚧 **TODO:**
+- Batch processing for all 42 audio files
+- Azure Speech Services integration
+- AssemblyAI integration
+- WER/CER evaluation metrics implementation
+- Google Sheets output integration
+- Audio preprocessing pipeline
+- Results analysis notebooks
+
 ## Background
 
 To improve cost-effectiveness, they are working to automate the final math-level assessment using an ASR model.
@@ -57,26 +79,26 @@ In the absence of professional human transcriptions, we use **Whisper Large V3**
 
 Based on Kannada language support and performance with low-bandwidth audio:
 
-**Tier 1 (MVP):**
+**Tier 1 (Testing in Progress):**
 
-1. **Whisper Large V3** - OpenAI's multilingual model (Phase 1 baseline, Phase 2 evaluated)
-2. **Azure Speech Services** - Kannada (kn-IN) confirmed, strong India presence
-3. **AssemblyAI** - Explicit Kannada support across 99+ languages
+1. **OpenAI Whisper API** - `whisper-1` model via API (cost: $0.006/min, ~$3.24 for 9 hours)
+2. **Sarvam AI** - India-focused STT with built-in Kannada support and transliteration
+3. **Azure Speech Services** - Kannada (kn-IN) confirmed, strong India presence (planned)
+4. **AssemblyAI** - Explicit Kannada support across 99+ languages (planned)
 
-**Tier 2 (If validated):** 4. **Google Cloud Speech-to-Text V2** - Likely Kannada support (pending verification)
+**Note:** Using Whisper API instead of local Whisper Large V3 due to computational constraints.
 
-**Excluded:**
-
-- Deepgram (no Kannada support, only Hindi/Indian English)
+**Transliteration:** Sarvam AI provides Roman script transliteration (Kannada → Latin) for human readability alongside native script transcriptions.
 
 **Evaluation criteria:**
 
 - Word Error Rate (WER) / Character Error Rate (CER)
 - Cost per hour of audio
 - Processing latency
+- Audio quality issues (repetition, hallucination on poor audio)
 - Custom WER for math-critical vocabulary (numbers, terms)
 
-**Budget estimate:** ~$25-30 for full 9-hour evaluation (4 models)
+**Budget estimate:** ~$5-10 for initial API testing + full 9-hour evaluation
 
 ## Architecture
 
@@ -171,14 +193,15 @@ cp config/config.template.yaml config/config.yaml
 **Environment Variables (`.env` file):**
 
 ```bash
-# Google Cloud
-GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+# STT API Keys (see .env.example for template)
+OPENAI_API_KEY=your_key_here
+SARVAM_API_KEY=your_key_here
 
-# STT API Keys
-AZURE_SPEECH_KEY=your_key_here
-AZURE_SPEECH_REGION=centralindia
-ASSEMBLYAI_API_KEY=your_key_here
-OPENAI_API_KEY=your_key_here  # If using Whisper API
+# TODO: Add when implementing
+# AZURE_SPEECH_KEY=your_key_here
+# AZURE_SPEECH_REGION=centralindia
+# ASSEMBLYAI_API_KEY=your_key_here
+# GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
 ```
 
 **Google Sheets Access (User OAuth):**
