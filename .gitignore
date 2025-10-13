@@ -12,6 +12,7 @@ files/
 
 # Jupyter
 .ipynb_checkpoints/
+*_executed.ipynb
 
 # macOS
 .DS_Store
