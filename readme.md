@@ -17,12 +17,13 @@ Youth Impact is an NGO focused on strengthening children's foundational math thr
 - Storage utilities with fsspec abstraction
 - **Batch processing: 37/40 files successfully transcribed (92.5% coverage)**
 - Audio format conversion utilities (AAC/AMR → MP3)
+- CSV export utilities for spreadsheet analysis
 - Reusable modules: `whisper_api.py`, `gpt_transliteration.py`, `sarvam_api.py`
 
 **Baseline Results (Whisper + GPT-4o-mini):**
 - ✅ 37 files processed successfully
-- 📊 3.44 hours of audio transcribed (38% of dataset)
-- 💰 $1.27 total cost ($0.37/hour)
+- 📊 7.29 hours of audio transcribed (81% of dataset)
+- 💰 $2.67 total cost ($0.37/hour)
 - ⚠️ 3 files skipped due to Whisper API 25MB file size limit:
   - `+919741460485_Karthik S B_converted.mp3` (25.8 min, 23MB)
   - `GHPS Neeralagi. M. G_converted.mp3` (27.0 min, 26MB)
@@ -283,7 +284,39 @@ uv run python -m yi_voice_eval.validate_config
 
 **Error Handling:** Failed files logged but don't block pipeline; retry once on transient errors.
 
-### 3. Evaluation & Results (`03_results_analysis.ipynb`)
+### 3. CSV Export (`scripts/format_results_to_csv.py`)
+
+**Input:** Folder containing JSON transcription files
+
+**Processing:**
+
+- Load all JSON files from specified folder
+- Extract metadata, full transcriptions, and segment-level data
+- Generate two CSV formats for different analysis needs
+
+**Output:**
+
+- **Summary CSV** (`files/reports/batch_whisper_gpt4o_summary_*.csv`): One row per file
+  - Columns: filename, duration, language, full_kannada_text, full_romanized_text, segment_count, costs, processed_at
+  - Use case: Cost analysis, overview statistics, full transcription review
+
+- **Detailed CSV** (`files/reports/batch_whisper_gpt4o_detailed_*.csv`): One row per segment
+  - Columns: filename, segment_id, start/end times, kannada_text, romanized_text, confidence metrics
+  - Use case: Time-based analysis, quality checks, segment-level error analysis
+
+**Usage:**
+
+```bash
+# Export from default folder (files/transcriptions/batch_whisper_gpt4o)
+uv run python scripts/format_results_to_csv.py
+
+# Export from custom folder
+uv run python scripts/format_results_to_csv.py path/to/json/folder
+```
+
+**Features:** Both timestamped and "latest" versions saved, progress tracking, error handling for malformed JSON
+
+### 4. Evaluation & Results (`03_results_analysis.ipynb`)
 
 **Input:** All transcription SRTs + Whisper baseline (or ground truth when available)
 
