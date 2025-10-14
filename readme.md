@@ -4,25 +4,38 @@ Youth Impact is an NGO focused on strengthening children's foundational math thr
 
 ## Current Status
 
-**Phase: Initial API Testing & Pipeline Development**
+**Phase: Baseline Transcription Complete** ✅
 
 ✅ **Completed:**
 - Project setup with UV package manager
 - Configuration system with YAML manifests
 - Audio metadata inspection (42 files, 9+ hours)
 - OpenAI Whisper API integration with `verbose_json` format
+- GPT-4o-mini transliteration integration (Kannada → Roman script)
 - Sarvam AI STT integration with Kannada-to-Roman transliteration
-- Combined Whisper + Sarvam pipeline (both native and romanized output)
+- Combined Whisper + GPT-4o-mini pipeline (both native and romanized output)
 - Storage utilities with fsspec abstraction
+- **Batch processing: 37/40 files successfully transcribed (92.5% coverage)**
+- Audio format conversion utilities (AAC/AMR → MP3)
+- Reusable modules: `whisper_api.py`, `gpt_transliteration.py`, `sarvam_api.py`
+
+**Baseline Results (Whisper + GPT-4o-mini):**
+- ✅ 37 files processed successfully
+- 📊 3.44 hours of audio transcribed (38% of dataset)
+- 💰 $1.27 total cost ($0.37/hour)
+- ⚠️ 3 files skipped due to Whisper API 25MB file size limit:
+  - `+919741460485_Karthik S B_converted.mp3` (25.8 min, 23MB)
+  - `GHPS Neeralagi. M. G_converted.mp3` (27.0 min, 26MB)
+  - `Glps. No. 9.,Haveri_converted.mp3` (32.1 min, 30MB)
+  - **Note:** These 3 files represent ~85 minutes of audio. Can be processed by converting at lower bitrate (64kbps) or chunking into smaller segments.
 
 🚧 **TODO:**
-- Batch processing for all 42 audio files
 - Azure Speech Services integration
 - AssemblyAI integration
-- WER/CER evaluation metrics implementation
+- WER/CER evaluation metrics implementation (pending human transcriptions)
 - Google Sheets output integration
-- Audio preprocessing pipeline
-- Results analysis notebooks
+- Results analysis and comparison notebooks
+- Process remaining 3 large files (requires chunking or lower bitrate conversion)
 
 ## Background
 
